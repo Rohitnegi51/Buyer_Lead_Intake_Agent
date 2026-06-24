@@ -1,20 +1,16 @@
 import os
 import json
-from google import genai
-from google.genai import types
 from models.schemas import BuyerRequirements, ValidationResult, LeadStrategy, PropertyScore, LeadBrief, ReasoningStep
 from typing import List
+from agents.llm_client import LLMClient
 
 class BriefGenerator:
     """
-    Uses Gemini 2.5 Flash to synthesize all deterministic agent outputs into a 
+    Uses LLMClient to synthesize all deterministic agent outputs into a 
     cohesive, professional markdown brief for the realtor.
     """
     def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY environment variable is not set.")
-        self.client = genai.Client(api_key=api_key)
+        self.llm = LLMClient()
 
     def generate_brief(
         self, 
@@ -64,17 +60,10 @@ class BriefGenerator:
         }}
         """
 
-        response = self.client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.0
-            )
-        )
+        response_text = self.llm.generate_brief(prompt)
         
         # Enforce validation against our schema
-        brief = LeadBrief.model_validate_json(response.text)
+        brief = LeadBrief.model_validate_json(response_text)
 
         # Generate formatting Markdown
         return self._render_markdown(brief)

@@ -52,8 +52,9 @@ class PropertySearcher:
         # Level 2: Expand budget by 10%
         level = 2
         expanded_budget = reqs.budget * 1.1 if reqs.budget else None
+        budget_str = f"${expanded_budget:,.0f}" if expanded_budget else "None"
         results = self._filter(self.df, expanded_budget, reqs.bedrooms, reqs.locations, reqs.property_types)
-        reasoning.append(ReasoningStep(step="Search", decision=f"Level 2 (Expanded Budget by 10% to ${expanded_budget:,.0f} if set): Found {len(results)} properties."))
+        reasoning.append(ReasoningStep(step="Search", decision=f"Level 2 (Expanded Budget by 10% to {budget_str}): Found {len(results)} properties."))
         
         if len(results) >= 10:
             return results.head(10), level, reasoning

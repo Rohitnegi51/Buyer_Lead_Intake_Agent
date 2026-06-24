@@ -1,17 +1,13 @@
 import os
-from google import genai
-from google.genai import types
 from models.schemas import BuyerRequirements
+from agents.llm_client import LLMClient
 
 class LeadAnalyzer:
     """
-    Uses Gemini to extract structured BuyerRequirements from raw natural language.
+    Uses LLMClient to extract structured BuyerRequirements from raw natural language.
     """
     def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY environment variable is not set.")
-        self.client = genai.Client(api_key=api_key)
+        self.llm = LLMClient()
 
     def analyze(self, text: str) -> BuyerRequirements:
         prompt = f"""
@@ -41,13 +37,5 @@ class LeadAnalyzer:
         {text}
         """
         
-        response = self.client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.0
-            )
-        )
-        
-        return BuyerRequirements.model_validate_json(response.text)
+        response_text = self.llm.analyze_lead(prompt)
+        return BuyerRequirements.model_validate_json(response_text)
